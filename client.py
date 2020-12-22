@@ -66,20 +66,20 @@ for name in covar_unnorm.columns:
 X = np.concatenate((covar.values, feature_genes.loc[index_samples].values), axis = 1) # np.array of input features
 y = phenotypes.values # np.array of output classes
 feature_names = np.array(['age','sex','age*sex','age^2','age^2*sex'] + pca_list + list(feature_genes.columns))
-if len(sys.argv) == 3:
-    pca_df = pd.read_csv('rarePCA.txt.eigenvec', header = None, sep = ' ', index_col = 0)
-    pca_df.drop(pca_df.columns[0], axis = 1, inplace = True)
-    pca_df = pca_df.loc[index_samples]
-    pca1 = pca_df.values[:,0]
-    pca1_perc = np.digitize(pca1, np.percentile(pca1, np.linspace(0,100,int(sys.argv[2]) + 1)[1:-1]))
-    inds = pca1_perc == int(sys.argv[1])
-    #inds = np.random.choice(range(X.shape[0]), int(0.5*X.shape[0]), replace = False)
-    #if int(sys.argv[2]) == 0:
-    #    inds = range(int(0.5*X.shape[0]))
-    #else:
-    #    inds = range(int(0.5*X.shape[0])+1,X.shape[0])
-    X = X[inds,:]
-    y = y[inds]
+#if len(sys.argv) == 3:
+#    pca_df = pd.read_csv('rarePCA.txt.eigenvec', header = None, sep = ' ', index_col = 0)
+#    pca_df.drop(pca_df.columns[0], axis = 1, inplace = True)
+#    pca_df = pca_df.loc[index_samples]
+#    pca1 = pca_df.values[:,0]
+#    pca1_perc = np.digitize(pca1, np.percentile(pca1, np.linspace(0,100,int(sys.argv[2]) + 1)[1:-1]))
+#    inds = pca1_perc == int(sys.argv[1])
+#    #inds = np.random.choice(range(X.shape[0]), int(0.5*X.shape[0]), replace = False)
+#    #if int(sys.argv[2]) == 0:
+#    #    inds = range(int(0.5*X.shape[0]))
+#    #else:
+#    #    inds = range(int(0.5*X.shape[0])+1,X.shape[0])
+#    X = X[inds,:]
+#    y = y[inds]
 print('Number of samples: {} {}'.format(X.shape[0], len(y)))
 print('Number of features: {} {}'.format(X.shape[1], len(feature_names)))
 print('Samples per phenotype class: {}'.format(', '.join(['{} = {}'.format(class_id, n_samples) for class_id, n_samples in zip(*np.unique(y, return_counts = True))])))
@@ -148,7 +148,7 @@ while True:
     received_message, status = recv(soc=soc, buffer_size = 4096, recv_timeout = 10)
     if status == 0:
         break
-    print('DEBUG>',received_message['what2do'],received_message['version'],received_message['i_iter'], end="\n\n")
+    #print('DEBUG>',received_message['what2do'],received_message['version'],received_message['i_iter'], end="\n\n")
     if received_message['i_iter'] < i_iter:
         fout.write('#END\n\n')
         fout.flush()
