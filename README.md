@@ -19,9 +19,16 @@ Required inputs:
 
 * The mask files in plink format (the same ones that we used as inputs for the burden test with regenie)
 
-* A space-separated text file with phenotype information. The first column is the id of the sample. Multiple phenotypes can be included in the same file, then the one to be used in training is selected into client.py. An example is included as example_pheno.txt.
+* A space-separated text file with phenotype information. The requisites of this file are (see example_pheno.txt):
+  * An header line is present
+  * The first column corresponds to the id of the sample (the name of this column is not important)
+Multiple phenotypes can be included in the same file. The phenotype that is used for training is selected into client.py. 
 
-* A space-separated text file with covariate information. Here again the first column is the id of the sample. This file needs to include two columns named *age* and *sex*. Sex should be coded as 1/0 for female/male. An example is included as example_covar.txt
+* A space-separated text file with covariate information. The requisites of this file are (see example_pheno.txt):
+  * An header line is present
+  * The first column corresponds to the id of the sample (the name of this column is not important)
+  * Two columns named *age* and *sex* are included
+  * Gender is coded as 1/0 for female/male
 
 For testing the code locally:
 
