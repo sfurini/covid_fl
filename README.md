@@ -15,19 +15,20 @@ The *sklearn* library is used for the ML model
 
 * client.py: client code. When requested by the server it performs a step of minimization of the loss function, and it sends back the updated model
 
+Required inputs:
+
+* The mask files in plink format (the same ones that we used as inputs for the burden test with regenie)
+
+* A space-separated text file with phenotype information. The first column is the id of the sample. Multiple phenotypes can be included in the same file, then the one to be used in training is selected into client.py. An example is included as example_pheno.txt.
+
+* A space-separated text file with covariate information. Here again the first column is the id of the sample. This file needs two columns named *age* and *sex*. Sex should be coded as 1/0 for female/male. An example is included as example_covar.txt
+
 For testing the code locally:
 
-* run prepare_inputs.sh to create the necessary input files
+* run prepare_inputs.sh to convert the mask files in plink format into txt
 
 * run the server with: python server.py
 
-* run as many clients as you want with: python client.py
+* run a client with: python client.py
 
-The variable *min_updated_clients* in server.py defines how many clients needs to be updated before the server model is updated
-
-If *min_updated_clients* is set to 1 and only one client is executed and the code reproduces a local (not-federated) learning of the model
-
-In client.py the variable *X* is the matrix of input features with samples along the row, and *y* is the array of output classes
-
-
-
+In this way only one client is executed and the code reproduces a local (not-federated) learning of the model
