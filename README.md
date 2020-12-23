@@ -21,7 +21,7 @@ Required inputs:
 
 * A space-separated text file with phenotype information. The first column is the id of the sample. Multiple phenotypes can be included in the same file, then the one to be used in training is selected into client.py. An example is included as example_pheno.txt.
 
-* A space-separated text file with covariate information. Here again the first column is the id of the sample. This file needs two columns named *age* and *sex*. Sex should be coded as 1/0 for female/male. An example is included as example_covar.txt
+* A space-separated text file with covariate information. Here again the first column is the id of the sample. This file needs to include two columns named *age* and *sex*. Sex should be coded as 1/0 for female/male. An example is included as example_covar.txt
 
 For testing the code locally:
 
