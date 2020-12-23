@@ -28,7 +28,7 @@ def recv(soc, buffer_size = 4096, recv_timeout = 10):
         except BaseException as e:
             return None, 0
             print("An error occurred while receiving data from the server {msg}".format(msg=e))
-        if received_data.decode('utf-8')[-1] == '\4': # end of transmission
+        if received_data.decode('utf-8')[-1] == '\4':
             break
     try:
         received_data = received_data.decode('utf-8')[:-1]
@@ -38,20 +38,19 @@ def recv(soc, buffer_size = 4096, recv_timeout = 10):
         return None, 0
     return received_data, 1
 
-server_ip = 'localhost'
-server_port = 10000
 
-#----- INITIALIZATION
+server_ip = 'localhost' # IP ADDRESS OF THE SERVER, localhost for testing the code locally
+server_port = 10000
 age_max = 100
-bim = pd.read_csv('./MergeM2.bim', header = None, sep = '\t')
-ped = pd.read_csv('./MergeM2.ped', header = None, index_col = 0, sep = '\t')
+bim = pd.read_csv('./MergeM2.bim', header = None, sep = '\t') # CHANGE WITH THE NAME OF THE MASK TO USE
+ped = pd.read_csv('./MergeM2.ped', header = None, index_col = 0, sep = '\t') # CHANGE WITH THE NAME OF THE MASK TO USE
 ped.drop(ped.columns[range(5)], axis = 1, inplace = True)
 ref_ref = (bim[5] + ' ' + bim[5]).values.reshape((1,-1)) 
-feature_genes = pd.DataFrame((ped.values != ref_ref).astype(int), columns = bim[1], index = ped.index) # this dataframe has samples along the rows and genes along the columns, features_local[i,j] is 1 if gene j in sample i is mutated
-pheno = pd.read_csv('./pheno.txt', sep = ' ', index_col = 0)
-covar_unnorm = pd.read_csv('./covar.txt', sep = ' ', index_col = 0)
+feature_genes = pd.DataFrame((ped.values != ref_ref).astype(int), columns = bim[1], index = ped.index)
+pheno = pd.read_csv('./pheno.txt', sep = ' ', index_col = 0) # CHANGE WITH THE NAME OF THE PHENOTYPE FILE, FOR AN EXAMPLE SEE example_pheno.txt
+covar_unnorm = pd.read_csv('./covar.txt', sep = ' ', index_col = 0) # CHANGE WITH THE NAME OF THE COVARIATES FILE, FOR AN EXAMPLE SEE example_covar.txt
 index_samples = set(feature_genes.index) & set(pheno.index) & set(covar_unnorm.index)
-phenotypes = pheno.loc[index_samples]['A2'] # where A2 is the name of the column of the pheno.txt considered for the analysis
+phenotypes = pheno.loc[index_samples]['A2'] # CHANGE WITH THE NAME OF THE COLUMN OF THE PHENOTYPE FILE TO USE
 covar = covar_unnorm.loc[index_samples][['age','sex']]
 covar['age'][covar['age'] > age_max] = age_max
 covar['age'] = covar['age'] / age_max
@@ -63,9 +62,10 @@ for name in covar_unnorm.columns:
     if 'PC' in name:
         covar[name] = covar_unnorm[name] - np.min(covar_unnorm[name])  / (np.max(covar_unnorm[name]) - np.min(covar_unnorm[name]))
         pca_list.append(name)
-X = np.concatenate((covar.values, feature_genes.loc[index_samples].values), axis = 1) # np.array of input features
-y = phenotypes.values # np.array of output classes
+X = np.concatenate((covar.values, feature_genes.loc[index_samples].values), axis = 1)
+y = phenotypes.values
 feature_names = np.array(['age','sex','age*sex','age^2','age^2*sex'] + pca_list + list(feature_genes.columns))
+# We used to simulate data that are not identically distributed
 #if len(sys.argv) == 3:
 #    pca_df = pd.read_csv('rarePCA.txt.eigenvec', header = None, sep = ' ', index_col = 0)
 #    pca_df.drop(pca_df.columns[0], axis = 1, inplace = True)
@@ -73,18 +73,13 @@ feature_names = np.array(['age','sex','age*sex','age^2','age^2*sex'] + pca_list 
 #    pca1 = pca_df.values[:,0]
 #    pca1_perc = np.digitize(pca1, np.percentile(pca1, np.linspace(0,100,int(sys.argv[2]) + 1)[1:-1]))
 #    inds = pca1_perc == int(sys.argv[1])
-#    #inds = np.random.choice(range(X.shape[0]), int(0.5*X.shape[0]), replace = False)
-#    #if int(sys.argv[2]) == 0:
-#    #    inds = range(int(0.5*X.shape[0]))
-#    #else:
-#    #    inds = range(int(0.5*X.shape[0])+1,X.shape[0])
 #    X = X[inds,:]
 #    y = y[inds]
 print('Number of samples: {} {}'.format(X.shape[0], len(y)))
 print('Number of features: {} {}'.format(X.shape[1], len(feature_names)))
 print('Samples per phenotype class: {}'.format(', '.join(['{} = {}'.format(class_id, n_samples) for class_id, n_samples in zip(*np.unique(y, return_counts = True))])))
 
-#--- dummy
+#--- dummy: an toy-dataset that we used to testing
 #from sklearn.preprocessing import PolynomialFeatures
 #n_samples = 1000
 #n_samples_half = int(0.5*n_samples)
@@ -133,7 +128,6 @@ if len(sys.argv) > 1:
 else:
     fout = open('client.out','wt')
 i_iter = 0
-#----- END: INITIALIZATION
 
 soc = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
 try:

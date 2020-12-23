@@ -200,12 +200,10 @@ def update_server_model(client_info):
     i_iter += 1
 
 #----- INITIALIZATION
-regs = [0.02,]
-regs = [0.0129,]
-regs = [0.010772173450159416,]
-regs = [0.01,]
+server_ip = 'localhost'
+server_port = 10000
 regs = np.logspace(np.log10(1e-3), np.log10(1e-2), 10)[::-1] # array with the tested values for regularization strengths
-regs = [1e-2, ]
+regs - [1e-2,]
 k_folds = 10 # number of folds for cross-validation
 i_reg = 0 # index in the array of regularization strenths
 i_fold = 0 # index of the fold for K-folds cross-validation
@@ -220,8 +218,6 @@ acc_means = np.empty(len(regs)) # average accuracy over k-folds at different reg
 acc_stds = np.empty(len(regs)) # standard deviation of the accuracy over k-folds at different regularization strengths
 server_model = SGDClassifier(loss = 'log', penalty = 'l1', alpha = regs[i_reg], max_iter = 1, learning_rate = 'constant', eta0 = learning_rate_0, early_stopping = False, tol = None)
 server_coef_ = False
-server_ip = 'localhost'
-server_port = 10000
 server_model_version = 0
 #----- END: INITIALIZATION
 
