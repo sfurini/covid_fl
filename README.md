@@ -22,8 +22,7 @@ Required inputs:
 * A space-separated text file with phenotype information. The requisites of this file are (see example_pheno.txt):
   * An header line is present
   * The first column corresponds to the id of the sample (the name of this column is not important)
-
-Multiple phenotypes can be included in the same file. The phenotype that is used for training is selected into client.py. 
+  * Multiple phenotypes can be included in the same file. The phenotype that is used for training is selected into client.py. 
 
 * A space-separated text file with covariate information. The requisites of this file are (see example_pheno.txt):
   * An header line is present
