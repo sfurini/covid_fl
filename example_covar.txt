@@ -1,0 +1,8 @@
+sample_id age sex
+id_1 64 1
+id_2 61 0
+id_3 53 0
+id_4 28 1
+id_5 70 1
+id_6 41 0
+[...]
