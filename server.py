@@ -14,11 +14,7 @@ print = functools.partial(print, flush=True)
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import SGDClassifier
 
-#import matplotlib.pyplot as plt
-#from matplotlib.backends.backend_pdf import PdfPages
-
 import encdec
-
 thread_lock = threading.Lock()
 
 class SocketThread(threading.Thread):
@@ -39,7 +35,7 @@ class SocketThread(threading.Thread):
                 if data == b'':
                     received_data = b""
                     if (time.time() - self.recv_start_time) > self.recv_timeout:
-                        return None, 0 # 0 means the connection is no longer active and it should be closed
+                        return None, 0
                 elif data.decode('utf-8')[-1] == '\4': # end of transmission
                     #print('All data ({data_len} bytes) Received from {client_info}.'.format(client_info=self.client_info, data_len=len(received_data)))
                     if len(received_data) > 0:
@@ -61,7 +57,6 @@ class SocketThread(threading.Thread):
         thread_lock.acquire()
         if (type(received_message) is dict):
             response_message = {'what2do':'done', 'version':server_model_version, 'i_iter': i_iter}
-            #print('DEBUG> ',i_iter,i_fold,i_reg,received_message['what2do'])
             if (i_iter == max_iter):
                 for client_name, client_score in client_infos['scores'].items():
                     confusion_matrix[:,:,i_fold] += client_score
@@ -160,6 +155,7 @@ class SocketThread(threading.Thread):
         thread_lock.release()
 
     def run(self):
+        global i_iter
         try:
             message_json = json.dumps({'what2do':'reset','version':server_model_version,'i_iter':-1}, cls = encdec.MessageEncoder) + '\4'
             message_bin = bytes(message_json, encoding="utf-8")
@@ -170,18 +166,22 @@ class SocketThread(threading.Thread):
         while True:
             self.recv_start_time = time.time()
             time_struct = time.gmtime()
-            #print('Waiting to Receive Data Starting from {day}/{month}/{year} {hour}:{minute}:{second} GMT'.format(year=time_struct.tm_year, month=time_struct.tm_mon, day=time_struct.tm_mday, hour=time_struct.tm_hour, minute=time_struct.tm_min, second=time_struct.tm_sec))
             received_data, status = self.recv()
             if status == 0:
                 self.connection.close()
+                i_iter = 0
+                if self.client_info in open_clients: open_clients.remove(self.client_info)
+                for keys, values in client_infos.items():
+                    if self.client_info in values: del values[self.client_info]
+                    for client_name, n_samples in client_infos['n_samples'].items():
+                        client_infos['n_samples'][client_name] = 0
                 print("Connection Closed with {client_info} either due to inactivity for {recv_timeout} seconds or due to an error".format(client_info=self.client_info, recv_timeout=self.recv_timeout), end="\n\n")
                 break
             self.reply(received_data)
 
 def update_server_model(client_info):
     global server_model, server_coef_, client_infos, i_iter, i_fold, i_reg, min_updated_clients, server_model_version
-    print('I_ITER:',i_iter,'I_FOLD:',i_fold,'I_REG:',i_reg)
-    #print('Updating server model to {} using data from {}'.format(server_model_version,client_info))
+    print('I_ITER:',i_iter,'I_FOLD:',i_fold,'I_REG:',i_reg,'FROM:',client_info,'CONNECTED:',open_clients)
     server_model.intercept_ = client_infos['models'][client_info].intercept_
     if isinstance(server_coef_, pd.Series):
         server_coef_ = server_coef_.reindex(set(server_coef_.index) | set(client_infos['coef_'][client_info].index))
@@ -189,20 +189,20 @@ def update_server_model(client_info):
     else:
         server_coef_ = client_infos['coef_'][client_info]
     n_updates_from_clients = np.sum([n_samples > 0 for client_name, n_samples in client_infos['n_samples'].items()])
-    if min_updated_clients == 1:
+    min_updates = max(min_updated_clients, len(open_clients))
+    if min_updates == 1:
         client_infos['n_samples'][client_info] = 0
-    elif n_updates_from_clients >= min_updated_clients:
+    elif n_updates_from_clients >= min_updates:
         for client_name, n_samples in client_infos['n_samples'].items():
             if (n_samples > 0) and (client_name != client_info):
                 client_infos['n_samples'][client_name] = 0
     server_model_version += 1
-    #server_model.eta0 = server_model.eta0 * (i_iter+1) / (i_iter + 2) # decreasing learning rate
     i_iter += 1
 
 #----- INITIALIZATION
 server_ip = 'localhost'
 server_port = 10000
-regs = np.logspace(np.log10(1e-3), np.log10(1e-2), 10)[::-1] # array with the tested values for regularization strengths
+regs = np.logspace(np.log10(1e-4), np.log10(1e-1), 4)# array with the tested values for regularization strengths
 regs - [1e-2,]
 k_folds = 10 # number of folds for cross-validation
 i_reg = 0 # index in the array of regularization strenths
@@ -210,10 +210,11 @@ i_fold = 0 # index of the fold for K-folds cross-validation
 i_iter = 0 # index of the minimization step
 i_reg_best = None # index of the optimal regularization strength
 learning_rate_0 = 1e-2 # starting learning rate
-min_updated_clients = 3 # the server model is updated only after receiving at least this number of updates from the clients
+min_updated_clients = 2 # the server model is updated only after receiving at least this number of updates from the clients, in any case all the connected clients need to update before restarting the cycle
 max_iter = 100*min_updated_clients # maximum number of minimization steps
 confusion_matrix = np.zeros((2,2,k_folds)) # this one is used to store the confusion matrixes during K-folds cross-validation
 client_infos = {'n_samples':{}, 'scores':{}, 'models':{}, 'coef_':{}}
+open_clients = [] # list of active clients
 acc_means = np.empty(len(regs)) # average accuracy over k-folds at different regularization strengths
 acc_stds = np.empty(len(regs)) # standard deviation of the accuracy over k-folds at different regularization strengths
 server_model = SGDClassifier(loss = 'log', penalty = 'l1', alpha = regs[i_reg], max_iter = 1, learning_rate = 'constant', eta0 = learning_rate_0, early_stopping = False, tol = None)
@@ -230,9 +231,12 @@ while True:
     try:
         connection, client_info = soc.accept()
         print("New Connection from: {client_info}".format(client_info=client_info))
-        socket_thread = SocketThread(connection=connection, client_info=client_info, buffer_size = 4096, recv_timeout=10*60)
+        i_iter = 0
+        open_clients.append(client_info)
+        socket_thread = SocketThread(connection=connection, client_info=client_info)
         socket_thread.start()
     except:
         soc.close()
+        if soc.client_info in open_clients: open_clients.remove(soc.client_info)
         print("(Timeout) Socket Closed Because no Connections Received\n")
         break
