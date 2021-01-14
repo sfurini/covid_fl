@@ -106,6 +106,8 @@ while True:
                 response_message['what2do'] = 'update'
                 response_message['n_samples'] = len(train_index)
                 response_message['confusion_matrix'] = cnf 
+                response_message['loss'] = loss
+                response_message['loss_reg'] = loss_reg
                 response_message['model'] = model
                 response_message['coef_'] = pd.Series(model.coef_.flatten(), index = feature_names)
         elif received_message['what2do'] == 'echo':
