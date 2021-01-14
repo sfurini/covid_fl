@@ -102,7 +102,7 @@ while True:
                 acc = np.sum(np.diag(cnf)) / np.sum(cnf)
                 loss = log_loss(y[train_index], model.predict_proba(X[train_index,:]), eps=1e-15)
                 loss_reg = loss + model.get_params()['alpha']*np.sum(np.abs(model.coef_))
-                print('DEBUG> {}\t{}\t{}\t{}\t{}\t{}'.format(received_message['version'], received_message['i_iter'], i_fold, loss, loss_reg, acc))
+                #print('DEBUG> {}\t{}\t{}\t{}\t{}\t{}'.format(received_message['version'], received_message['i_iter'], i_fold, loss, loss_reg, acc))
                 response_message['what2do'] = 'update'
                 response_message['n_samples'] = len(train_index)
                 response_message['confusion_matrix'] = cnf 
