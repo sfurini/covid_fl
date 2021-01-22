@@ -42,6 +42,7 @@ ped = pd.read_csv('./MergeM3.ped', header = None, index_col = 0, sep = '\t') # C
 pheno = pd.read_csv('./pheno.txt', sep = ' ', index_col = 0) # CHANGE WITH THE NAME OF THE PHENOTYPE FILE, FOR AN EXAMPLE SEE example_pheno.txt
 covar_unnorm = pd.read_csv('./covar.txt', sep = ' ', index_col = 0) # CHANGE WITH THE NAME OF THE COVARIATES FILE, FOR AN EXAMPLE SEE example_covar.txt
 server_ip = 'localhost' # CHANGE WITH THE IP ADDRESS OF THE SERVER, localhost for testing the code locally
+contact_id = 'blablabla' # CHANGE TO YOUR EMAIL, OR ANYTHING THAT ALLOWS ME TO CONTACT YOU IN CASE THE CODE DOESN'T WORK
 
 server_port = 10000
 ped.drop(ped.columns[range(5)], axis = 1, inplace = True)
@@ -114,6 +115,7 @@ while True:
             response_message = received_message
         elif received_message['what2do'] == 'reset':
             response_message = received_message
+            response_message['contact_id'] = contact_id
         elif received_message['what2do'] == 'done':
             break
         else:
